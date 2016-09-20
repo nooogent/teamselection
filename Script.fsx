@@ -9,6 +9,10 @@ open TeamSelection.Functions
 
 // Define your library scripting code here
 
-let children = TeamSelection.Data.getChildren
+let children = TeamSelection.Functions.getChildren
 
 children
+
+let childRatings = TeamSelection.Functions.getChildRatings
+
+childRatings

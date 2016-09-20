@@ -7,11 +7,6 @@
         type ChildCsv = CsvProvider<"data/TeamSelection.csv", Schema = "Name, Parent">
         type ChildRatingCsv = CsvProvider<"data/ChildRatings.csv", Schema = "Child, Coach, Rating">
 
-        let parseChild (row:ChildCsv.Row) = 
-            match row.Parent with 
-            | "" -> Child(ChildName(row.Name)) 
-            | _ -> ChildWithParent(ChildName(row.Name),Parent(Coach(row.Parent)))
-            
         let parseRating csvRating = 
             match csvRating with 
             | 1 -> Rating.One
@@ -19,6 +14,16 @@
             | 3 -> Rating.Three 
             | 4 -> Rating.Four 
             | _ -> Rating.Five
+
+        let parseChild (row:ChildCsv.Row) = 
+            match row.Parent with 
+            | "" -> Child(ChildName(row.Name)) 
+            | _ -> ChildWithParent(ChildName(row.Name),Parent(Coach(row.Parent)))
+            
+        let parseChildRating (row:ChildRatingCsv.Row) = 
+            let rowChild = new ChildCsv.Row(row.Child,row.Coach)
+            let parsedChild = parseChild rowChild
+            ChildRating(parsedChild, parseRating row.Rating, Coach(row.Coach) )
 
         let getChildren = 
         
@@ -30,11 +35,8 @@
 
         let getChildRatings = 
         
-            let childrenCsv = ChildRatingCsv.Load("data/ChildRatings.csv")
+            let childRatingsCsv = ChildRatingCsv.Load("data/ChildRatings.csv")
             
-            let parseRating (row:ChildRatingCsv.Row) = 
-                ChildRating(parseChild ChildCsv.Row(name:row.Child;parent:row.Coach), parseRating row.Rating, Coach(row.Coach) )
-
-            childrenCsv.Rows
-                |> Seq.map parseChild
+            childRatingsCsv.Rows
+                |> Seq.map parseChildRating
                 |> Seq.toList
