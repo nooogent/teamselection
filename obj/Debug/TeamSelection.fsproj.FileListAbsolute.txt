@@ -1,0 +1,10 @@
+C:\Projects\TeamSelection\bin\Debug\TeamSelection.XML
+C:\Projects\TeamSelection\bin\Debug\TeamSelection.dll
+C:\Projects\TeamSelection\bin\Debug\TeamSelection.pdb
+C:\Projects\TeamSelection\bin\Debug\FSharp.Core.dll
+C:\Projects\TeamSelection\bin\Debug\FSharp.Data.dll
+C:\Projects\TeamSelection\bin\Debug\FSharp.Data.pdb
+C:\Projects\TeamSelection\bin\Debug\FSharp.Data.xml
+C:\Projects\TeamSelection\bin\Debug\FSharp.Core.xml
+C:\Projects\TeamSelection\obj\Debug\TeamSelection.dll
+C:\Projects\TeamSelection\obj\Debug\TeamSelection.pdb
