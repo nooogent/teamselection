@@ -1,8 +1,34 @@
 ﻿namespace TeamSelection
     module Functions =
+        open System
+        open TeamSelection.Types
         open TeamSelection.Data
 
         let getChildren = getChildren
 
         let getChildRatings = getChildRatings
+
+        let getChildRatingAverages = 
+            
+            let allChildren = getChildren
+            let childRatings = getChildRatings
+
+            let childRatingAverages = 
+                childRatings
+                |> Seq.groupBy (fun (ChildRating (child,_,_)) -> child)
+                |> Seq.map (fun (child,childRatings) -> 
+                  (child,
+                    childRatings
+                    |> Seq.averageBy (fun (ChildRating (_,rating,_)) -> float rating)
+                    |> Math.Round))
+                |> Seq.toList
+            
+
+            let getChildRatingAverage child childRatingAverages =
+                childRatingAverages
+                |> List.tryPick(fun (ratingChild,averageRating) -> if Child.GetName ratingChild = Child.GetName child then Some(averageRating) else None)
+
+            allChildren
+            |> Seq.map(fun child -> (child, match getChildRatingAverage child childRatingAverages with | Some av -> av | None -> float Rating.Three))
+            |> Seq.toList
         

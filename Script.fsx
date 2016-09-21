@@ -16,3 +16,7 @@ children
 let childRatings = TeamSelection.Functions.getChildRatings
 
 childRatings
+
+let childRatingAverage = TeamSelection.Functions.getChildRatingAverages
+
+childRatingAverage

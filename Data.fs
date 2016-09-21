@@ -13,24 +13,23 @@
             | 2 -> Rating.Two 
             | 3 -> Rating.Three 
             | 4 -> Rating.Four 
-            | _ -> Rating.Five
+            | 5 -> Rating.Five 
+            | _ -> Rating.Three // default to average
 
-        let parseChild (row:ChildCsv.Row) = 
-            match row.Parent with 
-            | "" -> Child(ChildName(row.Name)) 
-            | _ -> ChildWithParent(ChildName(row.Name),Parent(Coach(row.Parent)))
+        let parseChild name parent = 
+            match parent with 
+            | "" -> Child(ChildName(name)) 
+            | _ -> ChildWithParent(ChildName(name),Parent(Coach(parent)))
             
         let parseChildRating (row:ChildRatingCsv.Row) = 
-            let rowChild = new ChildCsv.Row(row.Child,row.Coach)
-            let parsedChild = parseChild rowChild
-            ChildRating(parsedChild, parseRating row.Rating, Coach(row.Coach) )
+            ChildRating(parseChild row.Child "", parseRating row.Rating, Coach(row.Coach) )
 
         let getChildren = 
         
             let childrenCsv = ChildCsv.Load("data/TeamSelection.csv")
             
             childrenCsv.Rows
-                |> Seq.map parseChild
+                |> Seq.map (fun row -> parseChild row.Name row.Parent)
                 |> Seq.toList
 
         let getChildRatings = 

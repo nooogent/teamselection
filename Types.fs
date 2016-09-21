@@ -17,17 +17,30 @@
             | Five = 5
 
         type ChildRating = ChildRating of Child * Rating * Coach
-
+        
+        type ClubName = ClubName of string
         type TeamName = TeamName of string
+        type Pitch = Pitch of string
 
         type Team = 
             | HomeTeam of Coach * Child list * TeamName
             | AwayTeam of TeamName
 
-        type Fixture = Fixture of Team * Team
+        type Fixture = Fixture of Team * Team * Pitch
 
         type Tournament = {
+            HomeClub: ClubName;
+            AwayClub: ClubName;
             HomeTeams: Team list;
             AwayTeams: Team list;
+            Pitches: Pitch list;
             Fixtures: Fixture list;
         }
+
+    module Child =
+        open Types
+
+        let GetName child =
+            match child with
+            | Child (childName) -> childName
+            | ChildWithParent (childName, _) -> childName
