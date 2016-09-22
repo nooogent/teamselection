@@ -54,6 +54,7 @@
     <Compile Include="Library1.fs" />
     <Compile Include="Types.fs" />
     <Compile Include="Data.fs" />
+    <Compile Include="Helpers.fs" />
     <Content Include="packages.config" />
     <Compile Include="Functions.fs" />
     <None Include="Script.fsx" />

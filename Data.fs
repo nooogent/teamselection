@@ -4,8 +4,9 @@
         open TeamSelection.Types
         open FSharp.Data
         
-        type ChildCsv = CsvProvider<"data/TeamSelection.csv", Schema = "Name, Parent">
+        type ChildCsv = CsvProvider<"data/Children.csv", Schema = "Name, Parent">
         type ChildRatingCsv = CsvProvider<"data/ChildRatings.csv", Schema = "Child, Coach, Rating">
+        type CoachCsv = CsvProvider<"data/Coaches.csv", Schema = "Name">
 
         let parseRating csvRating = 
             match csvRating with 
@@ -26,7 +27,7 @@
 
         let getChildren = 
         
-            let childrenCsv = ChildCsv.Load("data/TeamSelection.csv")
+            let childrenCsv = ChildCsv.Load("data/Children.csv")
             
             childrenCsv.Rows
                 |> Seq.map (fun row -> parseChild row.Name row.Parent)
@@ -38,4 +39,12 @@
             
             childRatingsCsv.Rows
                 |> Seq.map parseChildRating
+                |> Seq.toList
+                
+        let getCoaches = 
+        
+            let coachesCsv = CoachCsv.Load("data/Coaches.csv")
+            
+            coachesCsv.Rows
+                |> Seq.map (fun row -> Coach(row.Name))
                 |> Seq.toList

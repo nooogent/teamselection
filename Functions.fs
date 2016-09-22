@@ -5,6 +5,8 @@
         open TeamSelection.Data
 
         let getChildren = getChildren
+        
+        let getCoaches = getCoaches
 
         let getChildRatings = getChildRatings
 
