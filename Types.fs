@@ -42,6 +42,8 @@
             | NotStreamedCoachWithChild
             | Streamed
             | StreamedCoachWithChild
+            | Balanced
+            | BalancedCoachWithChild
 
     module Coach =
         open Types
@@ -98,22 +100,22 @@
             
         let private childComparer child1 child2 =
             match (child1,child2) with
-            | Child.ChildWithParent(c2,p), Child.Child(c1) -> -1
+            | Child.ChildWithParent(c1,p), Child.Child(c2) -> -1
             | Child.ChildWithParent(c1,p1), Child.ChildWithParent(c2,p2) -> 0
             | _,_ -> 1
 
-        let private notStreamedSelector children =
+        let private randomSelector children =
             children
             |> Helpers.Shuffle
             |> Seq.map fst
             
-        let private notStreamedCoachWithChildSelector children =
+        let private randomCoachWithChildSelector children =
             children
             |> Helpers.Shuffle
             |> Seq.map fst
             |> Seq.sortWith childComparer
             
-        let private streamedSelector children =
+        let private rankedSelector children =
             children 
             |> Seq.sortByDescending snd
             |> Seq.map fst
@@ -141,7 +143,7 @@
                     Seq.rev newTeams
                 | head::tail ->
                     match (matchTeam co matcher head) with
-                    | (team,matched) when matched -> Seq.append (team::tail) newTeams
+                    | (team,matched) when matched -> Seq.append (Seq.rev(team::newTeams)) tail
                     | (_,_) -> matchTeams co matcher (head::newTeams) tail
 
             let assignCoachToOwnChildTeam teams coach =
@@ -168,21 +170,29 @@
             |> Seq.map(function | (t,Some c) -> (t,c) | (t,None) -> (t,Coach("NoCoach")))
 
         let calculateTeams children coachList teamSelectionType numTeams =
+
             let selector =
                 match teamSelectionType with
-                | TeamSelectionType.NotStreamed -> notStreamedSelector
-                | TeamSelectionType.NotStreamedCoachWithChild -> notStreamedCoachWithChildSelector
-                | TeamSelectionType.Streamed | TeamSelectionType.StreamedCoachWithChild -> streamedSelector
+                | TeamSelectionType.NotStreamed -> 
+                    randomSelector
+                | TeamSelectionType.NotStreamedCoachWithChild -> 
+                    randomCoachWithChildSelector
+                | TeamSelectionType.Streamed | TeamSelectionType.Balanced | TeamSelectionType.BalancedCoachWithChild | TeamSelectionType.StreamedCoachWithChild -> 
+                    rankedSelector
                 
             let teamAssigner =
                 match teamSelectionType with
-                | TeamSelectionType.NotStreamed | TeamSelectionType.NotStreamedCoachWithChild -> assignRoundRobin
-                | TeamSelectionType.Streamed | TeamSelectionType.StreamedCoachWithChild -> assignSequential
+                | TeamSelectionType.NotStreamed | TeamSelectionType.NotStreamedCoachWithChild | TeamSelectionType.Balanced | TeamSelectionType.BalancedCoachWithChild -> 
+                    assignRoundRobin
+                | TeamSelectionType.Streamed | TeamSelectionType.StreamedCoachWithChild -> 
+                    assignSequential
                 
             let coachAssigner =
                 match teamSelectionType with
-                | TeamSelectionType.NotStreamed | TeamSelectionType.Streamed -> randomCoachAssigner
-                | TeamSelectionType.NotStreamedCoachWithChild | TeamSelectionType.StreamedCoachWithChild -> withChildCoachAssigner
+                | TeamSelectionType.NotStreamed | TeamSelectionType.Streamed | TeamSelectionType.Balanced -> 
+                    randomCoachAssigner
+                | TeamSelectionType.NotStreamedCoachWithChild | TeamSelectionType.StreamedCoachWithChild | TeamSelectionType.BalancedCoachWithChild -> 
+                    withChildCoachAssigner
 
             selector children
             |> teamAssigner numTeams

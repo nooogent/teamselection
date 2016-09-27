@@ -33,7 +33,7 @@ let numPerTeam = 5
 let numTeams = int (System.Math.Floor(float (children.Length / numPerTeam)))
 
 
-let teams = calculateTeams (childRatingAverage |> List.toArray) (coaches |> List.toArray) TeamSelection.Types.TeamSelectionType.NotStreamedCoachWithChild numTeams |> Seq.toList
+let teams = calculateTeams (childRatingAverage |> List.toArray) (coaches |> List.toArray) TeamSelection.Types.TeamSelectionType.StreamedCoachWithChild numTeams |> Seq.toList
 //     -> if i % numTeams = numTeams - 1 then Some(c) else None) |> Seq.choose id |> Seq.toList
 //    let coach = coachList.[startIndex - 1]
 //    HomeTeam(coach, teamMembers, teamName)
