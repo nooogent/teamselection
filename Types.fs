@@ -43,6 +43,14 @@
             | Streamed
             | StreamedCoachWithChild
 
+    module Coach =
+        open Types
+
+        let MatchesChild coach child =
+            match child with 
+            | Child.ChildWithParent(_,Parent(co)) when co = coach -> true 
+            | _ -> false
+
     module Child =
         open Types
 
@@ -68,9 +76,14 @@
             | 9 -> TeamName("Team J")
             | _ -> TeamName("Too many teams")
              
+        let ContainsChild childFinder team =
+            team |> Seq.exists childFinder
+
     module Tournament =
-        open Types
+        open System
         open Helpers
+        open Types
+        open Coach
 
         let private assignRoundRobin numTeams orderedChildren =
             orderedChildren
@@ -115,29 +128,45 @@
             teams
             |> Seq.mapi(fun i t -> (t,shuffledCoachList.[i]))
 
-        let private withChildCoachAssigner (shuffledCoachList:Coach[]) teams = 
-            let findCoachForTeamsWithParentedChildren team coachList =
-                team
-                |> Seq.map(fun c -> match c with | Child.ChildWithParent(_,Parent(co)) -> Some(co) | _ -> None)
-                |> Seq.choose id
-                |> Seq.tryFind(fun co -> Seq.contains co coachList)
+        let private withChildCoachAssigner coachList teams = 
+        
+            let matchTeam co matcher team =
+                match team with
+                | (t,None) when matcher t -> ((t,Some co),true)
+                | (_,_) -> (team,false)
+                
+            let rec matchTeams co matcher newTeams oldTeams = 
+                match oldTeams with
+                | [] ->
+                    Seq.rev newTeams
+                | head::tail ->
+                    match (matchTeam co matcher head) with
+                    | (team,matched) when matched -> Seq.append (team::tail) newTeams
+                    | (_,_) -> matchTeams co matcher (head::newTeams) tail
 
-            let removeCoach coachToRemove coachList = 
+            let assignCoachToOwnChildTeam teams coach =
+                let matcher = Team.ContainsChild (Coach.MatchesChild coach)
+                teams |> Seq.toList |> matchTeams coach matcher []
+
+            let assignRemainingCoaches teams coach =
+                let alreadyAssigned = 
+                    teams 
+                    |> Seq.exists (function | (_,Some c) when c = coach -> true | (_,_) -> false)
+
+                let matcher = (fun t -> not alreadyAssigned)
+
+                teams |> Seq.toList |> matchTeams coach matcher []
+
+            let teamsWithoutCoaches = teams |> Seq.map(fun t -> (t,None))
+
+            let teamsWithOwnChildCoachesAssigned = 
                 coachList
-                |> Seq.filter (fun co ->  co <> Option.get coachToRemove)
+                |> Seq.fold(assignCoachToOwnChildTeam) teamsWithoutCoaches
 
-            teams
-            |> Seq.mapFold(fun cl t -> 
-                (t,(findCoachForTeamsWithParentedChildren t cl)),
-                (removeCoach (findCoachForTeamsWithParentedChildren t cl) cl)) (shuffledCoachList |> Array.toSeq)
-            |> fst 
-            |> Seq.map (fun tc ->
-                tc
-                |> Seq.choose(Option.isNone (snd tc))
-                |> Seq.fold(fun ccll tctc -> 
-                    ((fst tctc),(Seq.head ccll)), 
-                    (Seq.tail ccll) snd))
-            
+            coachList
+            |> Seq.fold(assignRemainingCoaches) teamsWithOwnChildCoachesAssigned
+            |> Seq.map(function | (t,Some c) -> (t,c) | (t,None) -> (t,Coach("NoCoach")))
+
         let calculateTeams children coachList teamSelectionType numTeams =
             let selector =
                 match teamSelectionType with
