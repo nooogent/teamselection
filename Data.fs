@@ -1,5 +1,7 @@
 ﻿namespace TeamSelection
+
     module Data = 
+
         open System
         open TeamSelection.Types
         open FSharp.Data

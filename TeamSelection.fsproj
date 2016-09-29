@@ -55,12 +55,13 @@
     <Compile Include="Types.fs" />
     <Compile Include="Coach.fs" />
     <Compile Include="Child.fs" />
+    <Compile Include="Pitch.fs" />
     <Compile Include="Team.fs" />
     <Compile Include="Tournament.fs" />
     <Compile Include="Data.fs" />
-    <Content Include="packages.config" />
     <Compile Include="Functions.fs" />
     <None Include="Script.fsx" />
+    <Content Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="FSharp.Data">

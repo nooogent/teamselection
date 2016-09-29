@@ -6,6 +6,7 @@
 #load "Data.fs"
 #load "Coach.fs"
 #load "Child.fs"
+#load "Pitch.fs"
 #load "Team.fs"
 #load "Tournament.fs"
 #load "Functions.fs"
@@ -18,7 +19,16 @@ open TeamSelection.Tournament
 open System
 open TeamSelection.Helpers
 
-// Define your library scripting code here
+let c = 
+    TeamSelection.Functions.generateFixtures  
+        (TeamSelection.Functions.generatePitches 5)
+        [HomeTeam(Coach("Bob"),[],TeamName("ATeam1"));HomeTeam(Coach("George"),[],TeamName("ATeam2"));HomeTeam(Coach("Paul"),[],TeamName("ATeam3"))] 
+        [AwayTeam(TeamName("BTeam1"));AwayTeam(TeamName("BTeam2"));AwayTeam(TeamName("BTeam3"))] 
+        20
+        DateTime.Now
+        60
+
+let pitches = TeamSelection.Functions.generatePitches 5
 
 let children = TeamSelection.Functions.getChildren
 children
