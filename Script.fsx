@@ -4,16 +4,20 @@
 #load "Helpers.fs"
 #load "Types.fs"
 #load "Data.fs"
+#load "Coach.fs"
+#load "Child.fs"
+#load "Team.fs"
+#load "Tournament.fs"
 #load "Functions.fs"
 
 open TeamSelection.Data
+open TeamSelection.Types
 open TeamSelection.Functions
-open TeamSelection.Helpers
 open TeamSelection.Child
 open TeamSelection.Tournament
 open System
+open TeamSelection.Helpers
 
-open TeamSelection.Types
 // Define your library scripting code here
 
 let children = TeamSelection.Functions.getChildren
@@ -22,10 +26,15 @@ children
 let coaches = TeamSelection.Functions.getCoaches
 coaches
 
+
+let childRatings = TeamSelection.Functions.getChildRatings
+
+childRatings
+
+//let list1 = [1..10]
+//let list2 = [1..9]
 //
-//let childRatings = TeamSelection.Functions.getChildRatings
-//
-//childRatings
+//let joined = list1 |> LeftJoin (=) (fun a b -> (a,b)) (fun a -> (a,0)) list2
 
 let childRatingAverage = TeamSelection.Functions.getChildRatingAverages |> List.sortBy (fun (c,_) -> GetName c) 
 
@@ -33,7 +42,13 @@ let numPerTeam = 5
 let numTeams = int (System.Math.Floor(float (children.Length / numPerTeam)))
 
 
-let teams = calculateTeams (childRatingAverage |> List.toArray) (coaches |> List.toArray) TeamSelection.Types.TeamSelectionType.StreamedCoachWithChild numTeams |> Seq.toList
+let teams = 
+    calculateTeams
+        childRatingAverage
+        coaches 
+        TeamSelectionType.StreamedCoachWithChild 
+        numTeams 
+    |> Seq.toList
 //     -> if i % numTeams = numTeams - 1 then Some(c) else None) |> Seq.choose id |> Seq.toList
 //    let coach = coachList.[startIndex - 1]
 //    HomeTeam(coach, teamMembers, teamName)

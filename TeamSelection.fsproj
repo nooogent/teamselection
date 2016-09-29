@@ -53,6 +53,10 @@
     <Compile Include="AssemblyInfo.fs" />
     <Compile Include="Helpers.fs" />
     <Compile Include="Types.fs" />
+    <Compile Include="Coach.fs" />
+    <Compile Include="Child.fs" />
+    <Compile Include="Team.fs" />
+    <Compile Include="Tournament.fs" />
     <Compile Include="Data.fs" />
     <Content Include="packages.config" />
     <Compile Include="Functions.fs" />
