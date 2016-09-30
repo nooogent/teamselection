@@ -22,9 +22,16 @@ open TeamSelection.Helpers
 let c = 
     TeamSelection.Functions.generateFixtures  
         (TeamSelection.Functions.generatePitches 5)
-        [HomeTeam(Coach("Bob"),[],TeamName("ATeam1"));HomeTeam(Coach("George"),[],TeamName("ATeam2"));HomeTeam(Coach("Paul"),[],TeamName("ATeam3"))] 
-        [AwayTeam(TeamName("BTeam1"));AwayTeam(TeamName("BTeam2"));AwayTeam(TeamName("BTeam3"))] 
-        20
+        [
+            HomeTeam(Coach("Bob"),[],TeamName("ATeam1"));
+            HomeTeam(Coach("George"),[],TeamName("ATeam2"));
+            HomeTeam(Coach("Paul"),[],TeamName("ATeam3"));
+            HomeTeam(Coach("Helen"),[],TeamName("ATeam4"));
+            HomeTeam(Coach("Sinead"),[],TeamName("ATeam5"));
+            HomeTeam(Coach("Liam"),[],TeamName("ATeam6"))
+        ] 
+        [AwayTeam(TeamName("BTeam1"));AwayTeam(TeamName("BTeam2"));AwayTeam(TeamName("BTeam3"));AwayTeam(TeamName("BTeam4"));AwayTeam(TeamName("BTeam5"));AwayTeam(TeamName("BTeam6"))] 
+        18
         DateTime.Now
         60
 

@@ -38,11 +38,14 @@
         type Team = 
             | HomeTeam of Coach * Child list * TeamName
             | AwayTeam of TeamName
+            | NoTeamAvailable
 
         type Duration = Duration of int<minute>
         type StartTime = StartTime of System.DateTime
 
-        type Fixture = Fixture of Team * Team * Pitch * Duration * StartTime
+        type Fixture = 
+            | Fixture of Team * Team * Pitch * Duration * StartTime
+            | RestFixture of Team * Team * Duration * StartTime
 
         type Tournament = {
             HomeClub: ClubName;
