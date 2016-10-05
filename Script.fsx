@@ -31,9 +31,26 @@ let c =
             HomeTeam(Coach("Liam"),[],TeamName("ATeam6"))
         ] 
         [AwayTeam(TeamName("BTeam1"));AwayTeam(TeamName("BTeam2"));AwayTeam(TeamName("BTeam3"));AwayTeam(TeamName("BTeam4"));AwayTeam(TeamName("BTeam5"));AwayTeam(TeamName("BTeam6"))] 
-        18
+        9
         DateTime.Now
         60
+        |> List.map (
+            function 
+            | Fixture(HomeTeam(_,_,TeamName(ht)),AwayTeam(TeamName(at)),Pitch(p),d,st) -> 
+                printf "%s %s %s\n" ht at p 
+            | RestFixture(HomeTeam(_,_,TeamName(ht)),AwayTeam(TeamName(at)),d,st) ->
+                 printf "%s %s None\n" ht at
+            | RestFixture(HomeTeam(_,_,TeamName(ht)),NoTeamAvailable,d,st) -> 
+                printf "%s None None\n" ht 
+            | RestFixture(NoTeamAvailable,AwayTeam(TeamName(at)),d,st) -> 
+                printf "None %s None\n" at
+            | Fixture(_,_,_,_,_) -> 
+                printf "Invalid Fixture\n"
+            | RestFixture(_,_,_,_) -> 
+                printf "Invalid Rest Fixture\n")
+
+for n in 0..5 do
+    printf "%O" (List.permute (fun i -> (i + n) % 6) [1..6])
 
 let pitches = TeamSelection.Functions.generatePitches 5
 

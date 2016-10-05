@@ -50,19 +50,31 @@
             
             let generateFixture teamsPitches mobileTeam =
                 
-                let generateRestFixture homeTeam awayTeam pitch n existingFixtures =
-                    if(n = (List.length existingFixtures)) then
-                        RestFixture(homeTeam,awayTeam,Duration(matchLength * 1<minute>),StartTime(startTime))::existingFixtures
-                    else
-                        let (Fixture(_,_,targetPitch,_,_)) = existingFixtures.[(List.length existingFixtures) - 1 - n]
-                        Fixture(homeTeam,awayTeam,targetPitch,Duration(matchLength * 1<minute>),StartTime(startTime))::(existingFixtures
-                        |> List.mapi (fun i f -> 
-                            match (i,f) with
-                            | (i,Fixture(ht,at,p,d,st)) when (List.length existingFixtures) - i = n -> 
-                                RestFixture(ht,mobileTeam,d,st)
-                            | (_,_) -> 
-                                f))
-                
+                let generateRestFixture homeTeam awayTeam pitch n (existingFixtures:Fixture list) =
+//                    if(n = 0) then
+//                        RestFixture(homeTeam,awayTeam,Duration(matchLength * 1<minute>),StartTime(startTime))::existingFixtures
+//                    else
+//                        let (Fixture(_,at,targetPitch,_,_)) = existingFixtures.[(List.length existingFixtures) - n]
+//                        Fixture(homeTeam,at,targetPitch,Duration(matchLength * 1<minute>),StartTime(startTime))::(existingFixtures
+//                        |> List.mapi (fun i f -> 
+//                            match (i,f) with
+//                            | (i,Fixture(ht,at',p,d,st)) when i = (List.length existingFixtures) - n -> 
+//                                RestFixture(ht,awayTeam,d,st)
+//                            | (_,_) -> 
+//                                f))
+                 let existingLength = List.length existingFixtures
+                 if(n = 0) then
+                    RestFixture(homeTeam,awayTeam,Duration(matchLength * 1<minute>),StartTime(startTime))::existingFixtures
+                 else
+                    let (Fixture(ht,at,targetPitch,_,_)) = existingFixtures.[n - 1]
+                    RestFixture(ht,awayTeam,Duration(matchLength * 1<minute>),StartTime(startTime))::(existingFixtures
+                    |> List.mapi (fun i f -> 
+                        match (i,f) with
+                        | (i,Fixture(_,at,p,d,st)) when i = (n - 1) -> 
+                            Fixture(homeTeam,at,p,d,st)
+                        | (_,_) -> 
+                            f))
+
                 match teamsPitches with
                 | ([],[],n,z) -> 
                     ([],[],n,generateRestFixture Team.NoTeamAvailable mobileTeam None n z)

@@ -6,9 +6,9 @@
         open TeamSelection.Types
         open FSharp.Data
         
-        type ChildCsv = CsvProvider<"data/Children.csv", Schema = "Name, Parent">
-        type ChildRatingCsv = CsvProvider<"data/ChildRatings.csv", Schema = "Child, Coach, Rating">
-        type CoachCsv = CsvProvider<"data/Coaches.csv", Schema = "Name">
+        type ChildCsv = CsvProvider<"./data/Children.csv", Schema = "Name, Parent">
+        type ChildRatingCsv = CsvProvider<"./data/ChildRatings.csv", Schema = "Child, Coach, Rating">
+        type CoachCsv = CsvProvider<"./data/Coaches.csv", Schema = "Name">
 
         let parseRating csvRating = 
             match csvRating with 
