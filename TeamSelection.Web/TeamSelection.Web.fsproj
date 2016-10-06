@@ -56,10 +56,15 @@
   <ItemGroup>
     <Compile Include="AssemblyInfo.fs" />
     <Compile Include="Path.fs" />
+    <Compile Include="Form.fs" />
+    <Compile Include="TSMap.fs" />
     <Compile Include="View.fs" />
     <Compile Include="App.fs" />
     <None Include="App.config" />
     <Content Include="packages.config" />
+    <Content Include="Site.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
   <ItemGroup>
     <Reference Include="FSharp.Data.TypeProviders" />
