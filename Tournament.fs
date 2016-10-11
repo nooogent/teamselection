@@ -38,6 +38,11 @@
             children 
             |> Seq.sortByDescending snd
             |> Seq.map fst
+            
+        let private rankedCoachWithChildSelector children =
+            children 
+            |> rankedSelector
+            |> Seq.sortWith childComparer
 
         let private randomCoachAssigner (shuffledCoachList:Coach list) teams =
             teams
@@ -90,9 +95,11 @@
                     randomSelector
                 | NotStreamedCoachWithChild -> 
                     randomCoachWithChildSelector
-                | Streamed | Balanced | StreamedCoachWithChild | BalancedCoachWithChild -> 
+                | Streamed | Balanced  -> 
                     rankedSelector
-                
+                | StreamedCoachWithChild | BalancedCoachWithChild ->
+                    rankedCoachWithChildSelector
+
             let teamAssigner =
                 match teamSelectionType with
                 | NotStreamed | Balanced | NotStreamedCoachWithChild | BalancedCoachWithChild -> 

@@ -1,7 +1,7 @@
 ﻿*
 {
-	margin: 0px;
-	padding: 0px;
+	margin: 0;
+	padding: 0;
 	border: none;
 }
 
@@ -10,7 +10,7 @@ body
 	font-family: Arial, Helvetica, sans-serif;
 	font-size: 14px;
 	background-color: #FBF9EF;
-	padding: 0px 6%;
+	padding: 0 6%;
 }
 
 #container
@@ -31,7 +31,7 @@ body
 	font-size: 18px;
 	float: left;
 	background: url(logo.png) no-repeat;
-	padding: 45px 0px 5px 0px;
+	padding: 45px 0 5px 0;
 }
 
 #promotion
@@ -63,7 +63,7 @@ ul
 ul#team-list
 {
 	list-style: none;
-	margin-left: 0px;
+	margin-left: 0;
 }
 
 ul#team-list li
@@ -161,7 +161,7 @@ ul#navlist li a:hover
 p
 {
 	margin-bottom: 15px;
-	margin-top: 0px;
+	margin-top: 0;
 }
 
 h2

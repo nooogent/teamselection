@@ -52,7 +52,7 @@ let c =
 for n in 0..5 do
     printf "%O" (List.permute (fun i -> (i + n) % 6) [1..6])
 
-let pitches = TeamSelection.Functions.generatePitches 5
+let pitches = TeamSelection.Functions.generatePitches 6
 
 let children = TeamSelection.Functions.getChildren
 children
@@ -72,15 +72,15 @@ childRatings
 
 let childRatingAverage = TeamSelection.Functions.getChildRatingAverages |> List.sortBy (fun (c,_) -> GetName c) 
 
-let numPerTeam = 5
-let numTeams = int (System.Math.Floor(float (children.Length / numPerTeam)))
+//let numPerTeam = 5
+let numTeams = 6//int (System.Math.Floor(float (children.Length / numPerTeam)))
 
 
 let teams = 
     calculateTeams
         childRatingAverage
         coaches 
-        TeamSelectionType.StreamedCoachWithChild 
+        TeamSelectionType.BalancedCoachWithChild 
         numTeams 
     |> Seq.toList
 //     -> if i % numTeams = numTeams - 1 then Some(c) else None) |> Seq.choose id |> Seq.toList
