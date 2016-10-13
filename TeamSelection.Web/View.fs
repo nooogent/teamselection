@@ -51,12 +51,11 @@ module View =
                 fieldset [
                     yield legend set.Legend
                     for field in set.Fields do
-                        yield divClass "editor-label" [
-                            text field.Label
-                        ]
-                        yield divClass "editor-field" [
-                            field.Xml layout.Form
-                        ]
+                        yield tag "label" [] (flatten 
+                            [
+                                text field.Label
+                            ])
+                        yield field.Xml layout.Form
                 ]
             yield submitInput layout.SubmitText
         ]
@@ -109,8 +108,8 @@ module View =
                     if(i > 0 && i % 3 = 0) then
                         yield div ["class","clearfix visible-lg-block"] [emptyText]
                     if(i > 0 && i % 2 = 0) then
-                        yield div ["class","clearfix visible-xs-block visible-sm-block visible-md-block"] [emptyText]
-                    yield div ["class","col-xs-6 col-lg-4"] (team t)
+                        yield div ["class","clearfix visible-sm-block visible-md-block"] [emptyText]
+                    yield div ["class","col-xs-12 col-sm-6 col-md-6 col-lg-4"] (team t)
             ]
     ]
 
