@@ -3,8 +3,8 @@
     module Data = 
 
         open System
-        open TeamSelection.Types
         open FSharp.Data
+        open TeamSelection.Types
         
         type ChildCsv = CsvProvider<"./data/Children.csv", Schema = "Name, Parent">
         type ChildRatingCsv = CsvProvider<"./data/ChildRatings.csv", Schema = "Child, Coach, Rating">

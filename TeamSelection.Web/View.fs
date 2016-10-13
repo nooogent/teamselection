@@ -8,12 +8,15 @@ module View =
     open TeamSelection.Types
     open Microsoft.FSharp.Reflection
     
-    let divId id = divAttr ["id", id]
-    let divClass c = divAttr ["class", c]
+    let meta attr = tag "meta" attr empty
+    let div attr xml = divAttr attr xml
+    let divId id = divAttr ["id",id]
+    let divClass c = divAttr ["class",c]
     let h1 xml = tag "h1" [] xml
     let h2 s = tag "h2" [] (text s)
     let aHref href = tag "a" ["href", href]
     let cssLink href = linkAttr [ "href", href; " rel", "stylesheet"; " type", "text/css" ]
+    let cssLinkHtml5 attr = linkAttr attr
     let ul xml = tag "ul" [] (flatten xml)
     let ulAttr attr xml = tag "ul" attr (flatten xml)
     let li = tag "li" []
@@ -79,28 +82,38 @@ module View =
         }
     ]
     
-    let team (teams:Team seq) = [
+    let team t = [
+        match t with
+        | HomeTeam(Coach(co),cs,TeamName(n)) ->
+            yield tag "h3" [] (text n)
+            yield tag "h4" [] (text (sprintf "Coach: %s" co))
+            yield ul [
+                for c in cs ->
+                match c with
+                | ChildWithParent(ChildName(cn),_)
+                | Child(ChildName(cn)) ->
+                    li (text cn)
+            ]
+        | AwayTeam(TeamName(n)) ->
+            yield li (text n)
+        | NoTeamAvailable ->
+            yield li (text "none")
+    ]
+
+    let teams (teams:Team seq) = [
         h2 (sprintf "Teams")
-        ul
+        div ["class","row"]
             [
-                for t in teams do
-                    match t with
-                    | HomeTeam(Coach(c),cs,TeamName(n)) ->
-                        yield li (text c)
-                        yield li (text n)
-                        yield ul [
-                            for c' in cs ->
-                            match c' with
-                            | ChildWithParent(ChildName(cn),_)
-                            | Child(ChildName(cn)) ->
-                                li (text cn)
-                        ]
-                    | AwayTeam(TeamName(n)) ->
-                        yield li (text n)
-                    | NoTeamAvailable ->
-                        yield li (text "none")
+                let indexedTeams = teams |> Seq.indexed
+                for (i,t) in indexedTeams do
+                    if(i > 0 && i % 3 = 0) then
+                        yield div ["class","clearfix visible-lg-block"] [emptyText]
+                    if(i > 0 && i % 2 = 0) then
+                        yield div ["class","clearfix visible-xs-block visible-sm-block visible-md-block"] [emptyText]
+                    yield div ["class","col-xs-6 col-lg-4"] (team t)
             ]
     ]
+
 
 //    let store genres = [
 //        h2 "Browse Genres"
@@ -144,25 +157,64 @@ module View =
         ]
     ]
 
-    let index container =
-        html [
-            head [
-                title "Team Selection"
-                cssLink "Site.css"
-            ]
-            body [
-                divId "header" [
-                    h1 (aHref Path.home (text "Team Selection Home"))
+    let nav items =
+        tag "nav" ["class","navbar navbar-inverse navbar-fixed-top"] (flatten
+            [
+                div ["class","container"] [
+                    div ["class","navbar-header"] [
+                        tag "button" ["type","button";"class","navbar-toggle collapsed";"data-toggle","collapse";"data-target","#navbar";"aria-expanded","false";"aria-controls","navbar"] (flatten 
+                            [
+                                spanAttr ["class","sr-only"] (text "Toggle navigation")
+                                spanAttr ["class","icon-bar"] emptyText
+                                spanAttr ["class","icon-bar"] emptyText
+                                spanAttr ["class","icon-bar"] emptyText
+                            ])
+                        tag "a" ["class","navbar-brand";"href",Path.home] (text "Team Selection")
+                    ]
+                    div ["id","navbar";"class","collapse navbar-collapse"] [
+                        ulAttr ["class","nav navbar-nav"] [
+                            tag "li" ["class","active"] (aHref Path.home (text "Home"))
+                            li (aHref "#about" (text "About"))
+                            li (aHref "#contact" (text "Contact"))
+                        ]
+                    ]
                 ]
+            ])
 
-                divId "main" container
-
-                divId "footer" [
-                    text "built with "
-                    aHref "http://fsharp.org" (text "F#")
-                    text " and "
-                    aHref "http://suave.io" (text "Suave.IO")
+    let index container =
+        [
+            text "<!DOCTYPE html>"
+            html [
+                head [
+                    meta ["charset","utf-8"]
+                    meta ["http-equiv","X-UA-Compatible";"content","IE=edge"]
+                    meta ["name","viewport";"content","width=device-width, initial-scale=1"]
+                    title "Team Selection"
+                    cssLinkHtml5 ["rel","stylesheet"; "href","https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"; " integrity","sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u"; " crossorigin","anonymous"]
+                    cssLinkHtml5 ["rel","stylesheet"; "href","https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css"; " integrity","sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp"; " crossorigin","anonymous"]
+                    text "<!--[if lt IE 9]>"
+                    tag "script" ["src","https://oss.maxcdn.com/html5shiv/3.7.3/html5shiv.min.js"] emptyText
+                    tag "script" ["src","https://oss.maxcdn.com/respond/1.4.2/respond.min.js"] emptyText
+                    text "<![endif]-->"
+                ]
+                body [
+                    nav []
+                    div ["id","main";"class","container"] 
+                        [ 
+                            (flatten container)
+                            tag "hr" [] empty
+                            tag "footer" [] (flatten
+                                [
+                                    text "built with "
+                                    aHref "http://fsharp.org" (text "F#")
+                                    text " and "
+                                    aHref "http://suave.io" (text "Suave.IO")
+                                ])
+                        ]
+                    tag "script" ["src","https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"] emptyText
+                    tag "script" ["src","https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"; "integrity","sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa"; "crossorigin","anonymous"] emptyText
                 ]
             ]
         ]
+        |> flatten
         |> xmlToString

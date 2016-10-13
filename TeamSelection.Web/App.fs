@@ -31,10 +31,11 @@ module App =
                         TeamSelection.Functions.getCoaches 
                         (TSMap.mapTeamSelectionType form.TypeId)
                         6
-                    |> View.team
+                        "Belmont"
+                    |> View.teams
                     |> html))
         ]
-
+    
     let webPart =
         choose [
             path Path.home >=> generateTeam

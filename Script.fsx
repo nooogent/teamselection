@@ -19,26 +19,46 @@ open TeamSelection.Tournament
 open System
 open TeamSelection.Helpers
 
+let pitches = TeamSelection.Functions.generatePitches 6
+
+let children = TeamSelection.Functions.getChildren
+children
+
+let coaches = TeamSelection.Functions.getCoaches
+coaches
+
+
+let childRatings = TeamSelection.Functions.getChildRatings
+
+childRatings
+
+//let list1 = [1..10]
+//let list2 = [1..9]
+//
+//let joined = list1 |> LeftJoin (=) (fun a b -> (a,b)) (fun a -> (a,0)) list2
+
+let childRatingAverage = TeamSelection.Functions.getChildRatingAverages |> List.sortBy (fun (c,_) -> GetName c) 
+
+//let numPerTeam = 5
+let numTeams = 6//int (System.Math.Floor(float (children.Length / numPerTeam)))
+
 let c = 
-    TeamSelection.Functions.generateFixtures  
-        (TeamSelection.Functions.generatePitches 5)
-        [
-            HomeTeam(Coach("Bob"),[],TeamName("ATeam1"));
-            HomeTeam(Coach("George"),[],TeamName("ATeam2"));
-            HomeTeam(Coach("Paul"),[],TeamName("ATeam3"));
-            HomeTeam(Coach("Helen"),[],TeamName("ATeam4"));
-            HomeTeam(Coach("Sinead"),[],TeamName("ATeam5"));
-            HomeTeam(Coach("Liam"),[],TeamName("ATeam6"))
-        ] 
-        [AwayTeam(TeamName("BTeam1"));AwayTeam(TeamName("BTeam2"));AwayTeam(TeamName("BTeam3"));AwayTeam(TeamName("BTeam4"));AwayTeam(TeamName("BTeam5"));AwayTeam(TeamName("BTeam6"))] 
-        9
+    (TeamSelection.Functions.generateFixtures  
+        pitches
+        [AwayTeam(TeamName("Beechwood Team 1"));AwayTeam(TeamName("Beechwood Team 2"));AwayTeam(TeamName("Beechwood Team 3"));AwayTeam(TeamName("Beechwood Team 4"));AwayTeam(TeamName("Beechwood Team 5"));AwayTeam(TeamName("Beechwood Team 6"))] 
+        ((calculateTeams childRatingAverage coaches TeamSelectionType.BalancedCoachWithChild numTeams "Belmont") |> Seq.toList)
+        15
         DateTime.Now
-        60
+        60)
         |> List.map (
             function 
             | Fixture(HomeTeam(_,_,TeamName(ht)),AwayTeam(TeamName(at)),Pitch(p),d,st) -> 
                 printf "%s %s %s\n" ht at p 
             | RestFixture(HomeTeam(_,_,TeamName(ht)),AwayTeam(TeamName(at)),d,st) ->
+                 printf "%s %s None\n" ht at 
+            | Fixture(AwayTeam(TeamName(at)),HomeTeam(_,_,TeamName(ht)),Pitch(p),d,st) -> 
+                printf "%s %s %s\n" ht at p 
+            | RestFixture(AwayTeam(TeamName(at)),HomeTeam(_,_,TeamName(ht)),d,st) ->
                  printf "%s %s None\n" ht at
             | RestFixture(HomeTeam(_,_,TeamName(ht)),NoTeamAvailable,d,st) -> 
                 printf "%s None None\n" ht 
@@ -81,7 +101,8 @@ let teams =
         childRatingAverage
         coaches 
         TeamSelectionType.BalancedCoachWithChild 
-        numTeams 
+        numTeams
+        "Belmont" 
     |> Seq.toList
 //     -> if i % numTeams = numTeams - 1 then Some(c) else None) |> Seq.choose id |> Seq.toList
 //    let coach = coachList.[startIndex - 1]

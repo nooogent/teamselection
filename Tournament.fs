@@ -35,7 +35,8 @@
             |> Seq.sortWith childComparer
             
         let private rankedSelector children =
-            children 
+            children
+            |> Helpers.ShuffleList  // Shuffle so that children on same rank will be varied 
             |> Seq.sortByDescending snd
             |> Seq.map fst
             
@@ -87,7 +88,7 @@
             |> Seq.fold(assignRemainingCoaches) teamsWithOwnChildCoachesAssigned
             |> Seq.map(function | (t,Some c) -> (t,c) | (t,None) -> (t,Coach("No Coach")))
 
-        let calculateTeams children coachList teamSelectionType numTeams =
+        let calculateTeams children coachList teamSelectionType numTeams homeTeamName =
 
             let selector =
                 match teamSelectionType with
@@ -95,9 +96,9 @@
                     randomSelector
                 | NotStreamedCoachWithChild -> 
                     randomCoachWithChildSelector
-                | Streamed | Balanced  -> 
+                | Streamed | StreamedCoachWithChild | Balanced  -> 
                     rankedSelector
-                | StreamedCoachWithChild | BalancedCoachWithChild ->
+                | BalancedCoachWithChild ->
                     rankedCoachWithChildSelector
 
             let teamAssigner =
@@ -118,4 +119,4 @@
             |> teamAssigner numTeams
             |> coachAssigner (coachList |> ShuffleList)
             |> Seq.mapi(fun i (team,coach) -> 
-                HomeTeam(coach,(team |> Seq.toList),Team.GetTeamName i))
+                HomeTeam(coach,(team |> Seq.sortBy Child.GetName |> Seq.toList),Team.GetTeamName (i + 1) homeTeamName))
