@@ -6,6 +6,7 @@ module View =
     open Suave.Html
     open Suave.Form
     open TeamSelection.Types
+    open TeamSelection.Child
     open Microsoft.FSharp.Reflection
     
     let meta attr = tag "meta" attr empty
@@ -22,15 +23,23 @@ module View =
     let li = tag "li" []
     let imgSrc src = imgAttr [ "src", src ]
     let em s = tag "em" [] (text s)
-    let button s url = inputAttr ["type","button";"value",s;"onclick", (sprintf "javascript:window.location = '%s';" url)] 
+    //let button s url = inputAttr ["type","button";"value",s;"onclick", (sprintf "javascript:window.location = '%s';" url)] 
     let formatDec (d : Decimal) = d.ToString(Globalization.CultureInfo.InvariantCulture)
-    let form x = tag "form" ["method", "POST"] (flatten x)
-    let submitInput value = inputAttr ["type", "submit"; "value", value]
+    let form x = tag "form" ["method", "POST";"class","form-horizontal"] (flatten x)
+    let submitInput attr value = inputAttr (List.append attr ["type", "submit"; "value", value])
+    let button attr value = tag "button" (List.append attr ["type", "submit"]) (text value)
     let fieldset x = tag "fieldset" [] (flatten x)
     let legend txt = tag "legend" [] (text txt)
 
+    let addAttributes newAttrs xml =
+        match xml with
+        | Element (n,ns,attrs) as e ->
+             Element (n,ns,Array.append newAttrs attrs)
+        | _ -> xml
+
     type Field<'a> = {
         Label : string
+        Id : string
         Xml : Form<'a> -> Suave.Html.Xml
     }
     
@@ -48,16 +57,26 @@ module View =
     let renderForm (layout : FormLayout<_>) =
         form [
             for set in layout.Fieldsets ->
-                fieldset [
+                divAttr [] [
                     yield legend set.Legend
                     for field in set.Fields do
-                        yield tag "label" [] (flatten 
-                            [
-                                text field.Label
-                            ])
-                        yield field.Xml layout.Form
+                        yield divAttr ["class", "form-group"] [
+                            yield tag "label" ["for",field.Id;"class","col-sm-2 control-label"] (text field.Label)
+                            yield
+                                match field.Xml layout.Form with 
+                                | Xml(ns) 
+                                    -> divAttr ["class", "col-sm-10"]
+                                        [
+                                            List.map(fun (e,x) -> ((addAttributes [|"id",field.Id;"class","form-control"|] e), x)) ns |> Xml.Xml
+                                        ]
+                        ]
                 ]
-            yield submitInput layout.SubmitText
+            yield 
+                divAttr ["class", "form-group"] [
+                    divAttr ["class", "col-sm-offset-2 col-sm-10"] [
+                        button ["class","btn btn-default"] layout.SubmitText
+                    ]
+                ]
         ]
     
     let home = [
@@ -71,8 +90,14 @@ module View =
                         Fields = 
                             [
                                 {
+                                    Label = "Club Name"
+                                    Id = "clubName"
+                                    Xml = input (fun f -> <@ f.ClubName @>) []
+                                }
+                                {
                                     Label = "Type"
-                                    Xml = selectInput (fun f -> <@ f.TypeId @>) TeamSelection.Web.Form.requestTypes  (Some(fst TeamSelection.Web.Form.requestTypes.[0]))
+                                    Id = "selectionType"
+                                    Xml = selectInput (fun f -> <@ f.TypeId @>) TeamSelection.Web.Form.requestTypes None
                                 }
                             ]
                     }
@@ -86,8 +111,8 @@ module View =
         | HomeTeam(Coach(co),cs,TeamName(n)) ->
             yield tag "h3" [] (text n)
             yield tag "h4" [] (text (sprintf "Coach: %s" co))
-            yield ul [
-                for c in cs ->
+            yield ulAttr ["class","list-unstyled"] [
+                for c in cs |> List.sortBy GetName ->
                 match c with
                 | ChildWithParent(ChildName(cn),_)
                 | Child(ChildName(cn)) ->

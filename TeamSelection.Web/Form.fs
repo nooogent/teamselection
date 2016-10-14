@@ -16,6 +16,7 @@ module Form =
         ]
 
     type TSRequest = {
+        ClubName : string
         TypeId : decimal
     }
 

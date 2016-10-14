@@ -17,6 +17,7 @@ open TeamSelection.Functions
 open TeamSelection.Child
 open TeamSelection.Tournament
 open System
+open System.IO
 open TeamSelection.Helpers
 
 let pitches = TeamSelection.Functions.generatePitches 6
@@ -41,29 +42,29 @@ let childRatingAverage = TeamSelection.Functions.getChildRatingAverages |> List.
 
 //let numPerTeam = 5
 let numTeams = 6//int (System.Math.Floor(float (children.Length / numPerTeam)))
-
+let HHmm (tw:TextWriter) (date:StartTime) = tw.Write("{0:HH:mm}", match date with | StartTime(d) -> d)
 let c = 
     (TeamSelection.Functions.generateFixtures  
         pitches
         [AwayTeam(TeamName("Beechwood Team 1"));AwayTeam(TeamName("Beechwood Team 2"));AwayTeam(TeamName("Beechwood Team 3"));AwayTeam(TeamName("Beechwood Team 4"));AwayTeam(TeamName("Beechwood Team 5"));AwayTeam(TeamName("Beechwood Team 6"))] 
         ((calculateTeams childRatingAverage coaches TeamSelectionType.BalancedCoachWithChild numTeams "Belmont") |> Seq.toList)
         15
-        DateTime.Now
+        (new System.DateTime(2016,10,15,9,0,0))
         60)
         |> List.map (
             function 
             | Fixture(HomeTeam(_,_,TeamName(ht)),AwayTeam(TeamName(at)),Pitch(p),d,st) -> 
-                printf "%s %s %s\n" ht at p 
+                printf "%s %s %s %a\n" ht at p HHmm st
             | RestFixture(HomeTeam(_,_,TeamName(ht)),AwayTeam(TeamName(at)),d,st) ->
-                 printf "%s %s None\n" ht at 
+                 printf "%s %s None %a\n" ht at HHmm st
             | Fixture(AwayTeam(TeamName(at)),HomeTeam(_,_,TeamName(ht)),Pitch(p),d,st) -> 
-                printf "%s %s %s\n" ht at p 
+                printf "%s %s %s %a\n" ht at p HHmm st
             | RestFixture(AwayTeam(TeamName(at)),HomeTeam(_,_,TeamName(ht)),d,st) ->
-                 printf "%s %s None\n" ht at
+                 printf "%s %s None %a\n" ht at HHmm st
             | RestFixture(HomeTeam(_,_,TeamName(ht)),NoTeamAvailable,d,st) -> 
-                printf "%s None None\n" ht 
+                printf "%s None None %a\n" ht HHmm st 
             | RestFixture(NoTeamAvailable,AwayTeam(TeamName(at)),d,st) -> 
-                printf "None %s None\n" at
+                printf "None %s None %a\n" at HHmm st
             | Fixture(_,_,_,_,_) -> 
                 printf "Invalid Fixture\n"
             | RestFixture(_,_,_,_) -> 

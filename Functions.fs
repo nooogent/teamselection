@@ -44,13 +44,13 @@
 //            numGames
         
         // if number of teams don't match sticky club has to be the one with fewer teams 
-        let generateFixtures pitches stickyTeams mobileTeams matchLength startTime tournamentLength =
+        let generateFixtures pitches stickyTeams mobileTeams matchLength (dateTime:DateTime) tournamentLength =
             let numGames = int(floor (float (tournamentLength/matchLength)))
             //let intervalLength = 1<minute> * int((tournamentLength - (numGames * matchLength)) / (numGames - 1))
             
             let generateFixture teamsPitches mobileTeam =
                 
-                let generateRestFixture homeTeam awayTeam pitch n (existingFixtures:Fixture list) =
+                let generateRestFixture homeTeam awayTeam pitch startTime n (existingFixtures:Fixture list) =
 //                    if(n = 0) then
 //                        RestFixture(homeTeam,awayTeam,Duration(matchLength * 1<minute>),StartTime(startTime))::existingFixtures
 //                    else
@@ -64,10 +64,10 @@
 //                                f))
                  let existingLength = List.length existingFixtures
                  if(n = 0) then
-                    RestFixture(homeTeam,awayTeam,Duration(matchLength * 1<minute>),StartTime(startTime))::existingFixtures
+                    RestFixture(homeTeam,awayTeam,Duration(matchLength * 1<minute>),startTime)::existingFixtures
                  else
                     let (Fixture(ht,at,targetPitch,_,_)) = existingFixtures.[n - 1]
-                    RestFixture(ht,awayTeam,Duration(matchLength * 1<minute>),StartTime(startTime))::(existingFixtures
+                    RestFixture(ht,awayTeam,Duration(matchLength * 1<minute>),startTime)::(existingFixtures
                     |> List.mapi (fun i f -> 
                         match (i,f) with
                         | (i,Fixture(_,at,p,d,st)) when i = (n - 1) -> 
@@ -76,24 +76,21 @@
                             f))
 
                 match teamsPitches with
-                | ([],[],n,z) -> 
-                    ([],[],n,generateRestFixture Team.NoTeamAvailable mobileTeam None n z)
-                    //RestFixture(Team.NoTeamAvailable,mobileTeam,Duration(matchLength * 1<minute>),StartTime(startTime))::z)
-                | ([],y::ys,n,z) -> 
-                    ([],ys,n,generateRestFixture Team.NoTeamAvailable mobileTeam (Some y) n z)
-                    //([],ys,RestFixture(Team.NoTeamAvailable,mobileTeam,Duration(matchLength * 1<minute>),StartTime(startTime))::z)
-                | (x::xs,[],n,z) -> 
-                    (xs,[],n,generateRestFixture x mobileTeam None n z)
-                    //(xs,[],RestFixture(x,mobileTeam,Duration(matchLength * 1<minute>),StartTime(startTime))::z)
-                | (x::xs,y::ys,n,z) -> 
-                    (xs,ys,n,Fixture(x,mobileTeam,y,Duration(matchLength * 1<minute>),StartTime(startTime))::z)
+                | ([],[],n,st,z) -> 
+                    ([],[],n,st,generateRestFixture Team.NoTeamAvailable mobileTeam None st n z)
+                | ([],y::ys,n,st,z) -> 
+                    ([],ys,n,st,generateRestFixture Team.NoTeamAvailable mobileTeam (Some y) st n z)
+                | (x::xs,[],n,st,z) -> 
+                    (xs,[],n,st,generateRestFixture x mobileTeam None st n z)
+                | (x::xs,y::ys,n,st,z) -> 
+                    (xs,ys,n,st,(Fixture(x,mobileTeam,y,Duration(matchLength * 1<minute>),st)::z))
 
             [
                 for n in 0..(numGames - 1) do
                     yield!
                         mobileTeams
                         |> List.permute (fun i -> (i + n) % (List.length mobileTeams)) 
-                        |> List.fold generateFixture (stickyTeams,pitches,n,[])
-                        |> function (_,_,_,fs) -> fs
+                        |> List.fold generateFixture (stickyTeams,pitches,n,StartTime(dateTime.AddMinutes(float (n * matchLength))),[]) 
+                        |> function (_,_,_,_,fs) -> fs
                         |> List.rev
             ]

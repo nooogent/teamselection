@@ -31,7 +31,7 @@ module App =
                         TeamSelection.Functions.getCoaches 
                         (TSMap.mapTeamSelectionType form.TypeId)
                         6
-                        "Belmont"
+                        form.ClubName
                     |> View.teams
                     |> html))
         ]
