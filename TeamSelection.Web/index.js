@@ -27,9 +27,9 @@ ControllerQobuz.prototype.onVolumioStart = function () {
     this.config = new (require('v-conf'))();
     this.config.loadFile(configFile);
 
-    if (self.config.get('bitrate') === true)
-        self.samplerate = "320Kbps";
-    else self.samplerate = "128Kbps";
+    if (self.config.get('max_bitrate') !== '')
+        self.samplerate = self.config.get('max_bitrate');
+    else self.samplerate = "6";
 };
 
 ControllerQobuz.prototype.getConfigurationFiles = function () {
@@ -227,3 +227,153 @@ ControllerSpop.prototype.explodeUri = function (uri) {
     }
     return defer.promise;
 };
+
+/*index.js*/
+ControllerSpop.prototype.getUIConfig = function () {
+    var defer = libQ.defer();
+    var self = this;
+
+    var lang_code = this.commandRouter.sharedVars.get('language_code');
+
+    self.commandRouter.i18nJson(__dirname + '/i18n/strings_' + lang_code + '.json',
+		__dirname + '/i18n/strings_en.json',
+		__dirname + '/UIConfig.json')
+		.then(function (uiconf) {
+
+		    uiconf.sections[0].content[0].value = self.config.get('username');
+		    uiconf.sections[0].content[1].value = '*********';
+		    uiconf.sections[0].content[2].value = self.config.get('max_bitrate');
+
+		    defer.resolve(uiconf);
+		})
+		.fail(function () {
+		    defer.reject(new Error());
+		});
+
+    return defer.promise;
+};
+
+ControllerQobuz.prototype.onVolumioStart = function () {
+    var self = this;
+    var configFile = this.commandRouter.pluginManager.getConfigurationFile(this.context, 'config.json');
+    this.config = new (require('v-conf'))();
+    this.config.loadFile(configFile);
+
+    if (self.config.get('max_bitrate') !== '')
+        self.samplerate = self.config.get('max_bitrate');
+    else self.samplerate = "6";
+};
+/*end index.js*/
+
+/*config.json*/
+{
+    "enabled": {
+        "type": "boolean",
+        "value": false
+    },
+  "username": {
+      "type": "string",
+      "value": ""
+  },
+  "password": {
+      "type": "string",
+      "value": ""
+  },
+  "user_auth_token": {
+      "type": "string",
+      "value": ""
+  },
+  "max_bitrate": {
+      "type": "boolean",
+      "value": "string"
+  }
+}
+/*end config.json*/
+
+/*UIConfig.json*/
+{
+    "page": {
+        "label": "TRANSLATE.QOBUZ_CONFIGURATION"
+    },
+  "sections": [
+   {
+       "id": "section_account",
+       "element": "section",
+       "label": "TRANSLATE.QOBUZ_ACCOUNT",
+       "icon": "fa-plug",
+       "onSave": {"type":"controller", "endpoint":"music_service/qobuz", "method":"saveQobuzConfiguration"},
+       "saveButton": {
+           "label": "TRANSLATE.SAVE",
+           "data": [
+             "username",
+             "password",
+             "max_bitrate"
+           ]
+       },
+       "content": [
+         {
+             "id": "username",
+             "type":"text",
+             "element": "input",
+             "doc": "TRANSLATE.QOBUZ_USERNAME_DOC",
+             "label": "TRANSLATE.QOBUZ_USERNAME",
+             "value": ""
+         },
+         {
+             "id": "password",
+             "type":"password",
+             "element": "input",
+             "doc": "TRANSLATE.QOBUZ_PASSWORD_DOC",
+             "label": "TRANSLATE.QOBUZ_PASSWORD",
+             "value": "",
+             'visibleIf': {'field': 'spotify_service', 'value': true}
+         },
+         {
+             "id":"max_bitrate",
+             "doc": "TRANSLATE.MAX_BITRATE_DOC",
+             "label": "TRANSLATE.MAX_BITRATE",
+             "element": "select",
+             "value": { 'value': 6, 'label': 'CD - 16bits / 44.1kHz' },
+             'options': [
+                 {
+                     'value': 5,
+                     'label': 'MP3 - 320 kbps'
+                 },
+                 {
+                     'value': 6,
+                     'label': 'CD - 16bits / 44.1kHz'
+                 },
+                 {
+                     'value': 7,
+                     'label': 'HiRes - 24bits / up to 96 kHz'
+                 },
+                 {
+                     'value': 27,
+                     'label': 'HiRes - 24bits / up to 192 kHz'
+                 }
+             ]
+         }
+       ]
+   }
+  ]
+}
+/*end UIConfig.json*/
+/*strings_en.json*/
+{
+    "QOBUZ_USERNAME": "Qobuz username",
+    "QOBUZ_USERNAME_DOC": "This is the password of your Qobuz account",
+    "QOBUZ_PASSWORD": "Qobuz password",
+    "QOBUZ_PASSWORD_DOC": "Qobuz password",
+    "MAX_BITRATE_DOC": "HiRes rates are only available to stream for users with a 'Sublime' subscription who have purchased that music in a HiRes format.",
+    "SEARCH_RESULTS": "Number of results",
+    "PLUGINS": "Last.fm",
+    "LAST_FM_USERNAME": "Last.fm username",
+    "LAST_FM_PASSWORD": "Last.fm password",
+    "SEARCH_SONGS_SECTION": "Qobuz songs",
+    "SEARCH_ALBUMS_SECTION": "Qobuz albums",
+    "SEARCH_ARTISTS_SECTION": "Qobuz artists",
+    "QOBUZ_CONFIGURATION": "Qobuz Configuration",
+    "QOBUZ_ACCOUNT": "Qobuz account",
+    "SAVE": "Save"
+
+}
