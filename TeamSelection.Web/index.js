@@ -229,6 +229,7 @@ ControllerSpop.prototype.explodeUri = function (uri) {
 };
 
 /*index.js*/
+
 ControllerSpop.prototype.getUIConfig = function () {
     var defer = libQ.defer();
     var self = this;
@@ -259,9 +260,80 @@ ControllerQobuz.prototype.onVolumioStart = function () {
     this.config = new (require('v-conf'))();
     this.config.loadFile(configFile);
 
-    if (self.config.get('max_bitrate') !== '')
+    if (self.config.get('max_bitrate') && self.config.get('max_bitrate') !== '')
         self.samplerate = self.config.get('max_bitrate');
-    else self.samplerate = "6";
+    else
+        self.samplerate = "6";
+
+    if (self.config.get('user_auth_token') && self.config.get('user_auth_token') !== '') {
+        self.userAuthToken = self.config.get('user_auth_token');
+        self.api = new QubuzApi(appid,user_auth_token);
+    }
+};
+
+ControllerQobuz.prototype.initialiseApi = function (userAuthToken) {
+    var self = this;
+
+    self.api = new qobuzApi(self.commandRouter.logger, userAuthToken, self.config.appId, self.config.appSecret);
+}
+
+ControllerQobuz.prototype.qobuzAccountLogin = function (data) {
+    var self = this;
+
+    var defer = libQ.defer();
+
+    var rejectAndPushToast = function() {
+        self.commandRouter.pushToastMessage('failure', "Qobuz Account Login", 'Qobuz account login failed.');
+        defer.reject(new Error());
+    }
+
+    if(!data.username || data.username.length > 0 || data.password || data.password.length > 0)
+        return rejectAndPushToast();
+
+    self.api.login(username, password)
+        .then(function(result) {
+            if(result.user_auth_token && result.user_auth_token.length > 0) {
+                //update config
+                self.config.set('username', data.username);
+                self.config.set('user_auth_token', result.user_auth_token);
+                
+                //initalise qobuz api
+                self.initialiseApi(result.user_auth_token);
+
+                //celebrate great success!
+                self.commandRouter.pushToastMessage('success', "Qobuz Account Login", 'You have been successsfully logged in to your Qobuz account');
+                defer.resolve({});
+            }
+            else {
+                rejectAndPushToast();
+            }
+        })
+        .fail(function(e){ rejectAndPushToast(); });
+
+    return defer.promise;
+};
+
+ControllerQobuz.prototype.qobuzAccountLogout = function () {
+    var self = this;
+    
+    self.config.set('username', "");
+    self.config.set('user_auth_token', "");
+
+    delete self.api;
+    self.commandRouter.pushToastMessage('success', "Qobuz Account Log out", 'You have been successsfully logged out of your Qobuz account');
+
+    return libQ.resolve();
+};
+
+ControllerQobuz.prototype.saveQobuzSettings = function (data) {
+    var self = this;
+
+    var maxBitRate = (data['max_bitrate'] && data['max_bitrate'].length > 0) ? data['max_bitrate'].value : 6;
+    self.config.set('bitrate', maxBitRate);
+    this.max_bitrate = maxBitRate;
+    self.commandRouter.pushToastMessage('success', "Qobuz Settings update", 'Your setting have been successsfully updated.');
+
+    return libQ.resolve();
 };
 /*end index.js*/
 
@@ -271,22 +343,22 @@ ControllerQobuz.prototype.onVolumioStart = function () {
         "type": "boolean",
         "value": false
     },
-  "username": {
-      "type": "string",
-      "value": ""
-  },
-  "password": {
-      "type": "string",
-      "value": ""
-  },
-  "user_auth_token": {
-      "type": "string",
-      "value": ""
-  },
-  "max_bitrate": {
-      "type": "boolean",
-      "value": "string"
-  }
+    "username": {
+        "type": "string",
+        "value": ""
+    },
+    "password": {
+        "type": "string",
+        "value": ""
+    },
+    "user_auth_token": {
+        "type": "string",
+        "value": ""
+    },
+    "max_bitrate": {
+        "type": "number",
+        "value": 6: 
+    }
 }
 /*end config.json*/
 
@@ -296,65 +368,109 @@ ControllerQobuz.prototype.onVolumioStart = function () {
         "label": "TRANSLATE.QOBUZ_CONFIGURATION"
     },
   "sections": [
-   {
-       "id": "section_account",
-       "element": "section",
-       "label": "TRANSLATE.QOBUZ_ACCOUNT",
-       "icon": "fa-plug",
-       "onSave": {"type":"controller", "endpoint":"music_service/qobuz", "method":"saveQobuzConfiguration"},
-       "saveButton": {
-           "label": "TRANSLATE.SAVE",
-           "data": [
-             "username",
-             "password",
-             "max_bitrate"
-           ]
-       },
-       "content": [
-         {
-             "id": "username",
-             "type":"text",
-             "element": "input",
-             "doc": "TRANSLATE.QOBUZ_USERNAME_DOC",
-             "label": "TRANSLATE.QOBUZ_USERNAME",
-             "value": ""
-         },
-         {
-             "id": "password",
-             "type":"password",
-             "element": "input",
-             "doc": "TRANSLATE.QOBUZ_PASSWORD_DOC",
-             "label": "TRANSLATE.QOBUZ_PASSWORD",
-             "value": "",
-             'visibleIf': {'field': 'spotify_service', 'value': true}
-         },
-         {
-             "id":"max_bitrate",
-             "doc": "TRANSLATE.MAX_BITRATE_DOC",
-             "label": "TRANSLATE.MAX_BITRATE",
-             "element": "select",
-             "value": { 'value': 6, 'label': 'CD - 16bits / 44.1kHz' },
-             'options': [
-                 {
-                     'value': 5,
-                     'label': 'MP3 - 320 kbps'
-                 },
-                 {
-                     'value': 6,
-                     'label': 'CD - 16bits / 44.1kHz'
-                 },
-                 {
-                     'value': 7,
-                     'label': 'HiRes - 24bits / up to 96 kHz'
-                 },
-                 {
-                     'value': 27,
-                     'label': 'HiRes - 24bits / up to 192 kHz'
-                 }
-             ]
-         }
-       ]
-   }
+    {
+        "id": "section_account_login",
+        "element": "section",
+        "label": "TRANSLATE.QOBUZ_ACCOUNT",
+        "icon": "fa-plug",
+        "onSave": {
+            "type": "controller",
+            "endpoint": "music_service/qobuz",
+            "method": "qobuzAccountLogin"
+        },
+        "saveButton": {
+            "label": "TRANSLATE.LOGIN",
+            "data": [
+              "username",
+              "password"
+            ]
+        },
+        "content": [
+          {
+              "id": "username",
+              "type": "text",
+              "element": "input",
+              "doc": "TRANSLATE.QOBUZ_USERNAME_DOC",
+              "label": "TRANSLATE.QOBUZ_USERNAME",
+              "value": ""
+          },
+          {
+              "id": "password",
+              "type": "password",
+              "element": "input",
+              "doc": "TRANSLATE.QOBUZ_PASSWORD_DOC",
+              "label": "TRANSLATE.QOBUZ_PASSWORD",
+              "value": ""
+          }
+        ]
+    },
+    {
+        "id": "section_account_logout",
+        "element": "section",
+        "label": "TRANSLATE.QOBUZ_ACCOUNT",
+        "icon": "fa-plug",
+        "decription": "TRANSLATE.QOBUZ_ACCOUNT_LOGOUT_DESC",
+        "content": [
+          {
+              "id": "logout",
+              "element": "button",
+              "label": "TRANSLATE.LOGOUT",
+              "onClick": {
+                  "type": "controller",
+                  "endpoint": "music_service/qobuz",
+                  "method": "qobuzAccountLogout"
+              }
+          }
+        ]
+    },
+    {
+        "id": "section_settings",
+        "element": "section",
+        "label": "TRANSLATE.QOBUZ_SETTINGS",
+        "icon": "fa-plug",
+        "decription": "TRANSLATE.QOBUZ_SETTINGS_DESC",
+        "onSave": {
+            "type": "controller",
+            "endpoint": "music_service/qobuz",
+            "method": "saveQobuzSettings"
+        },
+        "saveButton": {
+            "label": "TRANSLATE.LOGIN",
+            "data": [
+              "max_bitrate"
+            ]
+        },
+        "content": [
+          {
+              "id": "max_bitrate",
+              "doc": "TRANSLATE.QOBUZ_MAX_BITRATE_DOC",
+              "label": "TRANSLATE.QOBUZ_MAX_BITRATE",
+              "element": "select",
+              "value": {
+                  "value": 6,
+                  "label": "CD - 16bits / 44.1kHz"
+              },
+              "options": [
+                {
+                    "value": 5,
+                    "label": "MP3 - 320 kbps"
+                },
+                {
+                    "value": 6,
+                    "label": "CD - 16bits / 44.1kHz"
+                },
+                {
+                    "value": 7,
+                    "label": "HiRes - 24bits / up to 96 kHz"
+                },
+                {
+                    "value": 27,
+                    "label": "HiRes - 24bits / up to 192 kHz"
+                }
+              ]
+          }
+        ]
+    }
   ]
 }
 /*end UIConfig.json*/
@@ -364,16 +480,25 @@ ControllerQobuz.prototype.onVolumioStart = function () {
     "QOBUZ_USERNAME_DOC": "This is the password of your Qobuz account",
     "QOBUZ_PASSWORD": "Qobuz password",
     "QOBUZ_PASSWORD_DOC": "Qobuz password",
-    "MAX_BITRATE_DOC": "HiRes rates are only available to stream for users with a 'Sublime' subscription who have purchased that music in a HiRes format.",
+    "QOBUZ_SETTINGS_DESC": "HiRes rates are only available to stream for users with a 'Sublime' subscription who have purchased the requested music in a HiRes format",
+    "QOBUZ_MAX_BITRATE": "Max Bit Rate",
+    "QOBUZ_MAX_BITRATE_DOC": "Specify max bit rate to use for tracks with multiple bit rate options available",
+    "QOBUZ_CONFIGURATION": "Qobuz Configuration",
+    "QOBUZ_ACCOUNT": "Qobuz account",
+    "QOBUZ_SETTINGS": "Qobuz settings",
+    "QOBUZ_ACCOUNT_LOGIN_DESC": "Log in with your Qobuz username and password. Please note that your password is not stored anywhere on Volumio.",
+    "QOBUZ_ACCOUNT_LOGOUT_DESC": "You are logged in as {0}. If you log out Qobuz will no longer function on this Volumio instance.",
+    "SAVE": "Save",
+    "LOGIN": "Login",
+    "LOGOUT": "Log Out",
+
     "SEARCH_RESULTS": "Number of results",
     "PLUGINS": "Last.fm",
     "LAST_FM_USERNAME": "Last.fm username",
     "LAST_FM_PASSWORD": "Last.fm password",
     "SEARCH_SONGS_SECTION": "Qobuz songs",
     "SEARCH_ALBUMS_SECTION": "Qobuz albums",
-    "SEARCH_ARTISTS_SECTION": "Qobuz artists",
-    "QOBUZ_CONFIGURATION": "Qobuz Configuration",
-    "QOBUZ_ACCOUNT": "Qobuz account",
-    "SAVE": "Save"
+    "SEARCH_ARTISTS_SECTION": "Qobuz artists"
 
 }
+
